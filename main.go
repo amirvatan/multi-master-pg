@@ -21,8 +21,7 @@ const (
 	DBUser     = "test"
 	DBPassword = "1234"
 	DBHost     = "localhost"
-	DBPort     = "5432"
-	DBSUBPort  = "15432"
+	DBPort     = "15432"
 	DBName     = "db"
 
 	// Publication and subscription names for counter table
@@ -226,7 +225,7 @@ func ensureSubscription(pool *pgxpool.Pool, publisherConn string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// Escape single quotes in connection string for SQL
-	query := fmt.Sprintf("CREATE SUBSCRIPTION %s CONNECTION 'dbname=%s host=%s user=%s password=%s port=%s' PUBLICATION %s", SubName, DBName, publisherConn, DBUser, DBPassword, DBSUBPort, PubName)
+	query := fmt.Sprintf("CREATE SUBSCRIPTION %s CONNECTION 'dbname=%s host=%s user=%s password=%s port=%s' PUBLICATION %s", SubName, DBName, publisherConn, DBUser, DBPassword, DBPort, PubName)
 	fmt.Println("SUB TO : ", query)
 	_, err := pool.Exec(ctx, query)
 	if err != nil && strings.Contains(err.Error(), "already exists") {
