@@ -22,6 +22,7 @@ const (
 	DBPassword = "1234"
 	DBHost     = "localhost"
 	DBPort     = "5432"
+	DBSUBPort  = "15432"
 	DBName     = "db"
 
 	// Publication and subscription names for counter table
@@ -195,18 +196,13 @@ func runWriter(ctx context.Context, pool *pgxpool.Pool) {
 }
 
 func publisherConnString() string {
-	if s := os.Getenv("SUB_PUBLISHER_URL"); s != "" {
-		return s
-	}
-	host := os.Getenv("SUB_DB_HOST")
-	if host == "" {
-		return ""
-	}
-	port := os.Getenv("SUB_DB_PORT")
-	if port == "" {
-		port = DBPort
-	}
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", DBUser, DBPassword, host, port, DBName)
+
+	fmt.Print("Enter pub db ip : ")
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	host := strings.TrimSpace(scanner.Text())
+
+	return host
 }
 
 func ensurePublication(pool *pgxpool.Pool) error {
@@ -230,8 +226,8 @@ func ensureSubscription(pool *pgxpool.Pool, publisherConn string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// Escape single quotes in connection string for SQL
-	escaped := strings.ReplaceAll(publisherConn, "'", "''")
-	query := fmt.Sprintf("CREATE SUBSCRIPTION %s CONNECTION '%s' PUBLICATION %s", SubName, escaped, PubName)
+	query := fmt.Sprintf("CREATE SUBSCRIPTION %s CONNECTION 'dbname=%s host=%s user=%s password=%s port=%s' PUBLICATION %s", SubName, DBName, publisherConn, DBUser, DBPassword, DBSUBPort, PubName)
+	fmt.Println("SUB TO : ", query)
 	_, err := pool.Exec(ctx, query)
 	if err != nil && strings.Contains(err.Error(), "already exists") {
 		return nil
@@ -299,7 +295,7 @@ func runReadTable(pool *pgxpool.Pool) {
 		}
 	}
 	close(done)
-	time.Sleep(200 * time.Millisecond) // let goroutines see done and exit
+	time.Sleep(200 * time.Millisecond)    // let goroutines see done and exit
 	os.Stdin.SetReadDeadline(time.Time{}) // clear deadline so main prompt can read again
 	fmt.Println("INFO :::: read stopped")
 }
