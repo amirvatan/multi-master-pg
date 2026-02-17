@@ -21,7 +21,7 @@ const (
 	DBUser     = "test"
 	DBPassword = "1234"
 	DBHost     = "localhost"
-	DBPort     = "15432"
+	DBPort     = "5432"
 	DBName     = "db"
 
 	// Publication and subscription names for counter table
@@ -222,7 +222,7 @@ func clearCounter(pool *pgxpool.Pool) error {
 }
 
 func ensureSubscription(pool *pgxpool.Pool, publisherConn string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	// Escape single quotes in connection string for SQL
 	query := fmt.Sprintf("CREATE SUBSCRIPTION %s CONNECTION 'dbname=%s host=%s user=%s password=%s port=%s' PUBLICATION %s", SubName, DBName, publisherConn, DBUser, DBPassword, DBPort, PubName)
