@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: db
     command: postgres -c wal_level=logical
     ports:
-      - "15432:5432"
+      - "0.0.0.0:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
